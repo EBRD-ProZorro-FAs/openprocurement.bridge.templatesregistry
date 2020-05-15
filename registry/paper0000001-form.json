@@ -1,0 +1,36 @@
+{
+    "institutiveDocument": {
+        "type": "input",
+        "label": "Статутний документ"
+    },
+    "officialPerson": {
+        "type": "input",
+        "label": "Посадова особа"
+    },
+    "officialPerson_born": {
+        "type": "input",
+        "label": "Посадова особа в родовому відмінку"
+    },
+    "position": {
+        "type": "input",
+        "label": "Посада"
+    },
+    "taxStatus": {
+        "type": "input",
+        "label": "Податковий статус"
+    },
+    "accountData": {
+        "accountNumber": {
+            "type": "input",
+            "label": "Розрахунковий статус"
+        },
+        "accountServiceOrganization": {
+            "type": "input",
+            "label": "Назва банку"
+        },
+        "accountServiceOrganizationMFO": {
+            "type": "input",
+            "label": "МФО"
+        }
+    }
+}

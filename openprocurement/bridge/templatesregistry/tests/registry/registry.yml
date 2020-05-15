@@ -1,0 +1,4 @@
+paper0000001:
+  template: "paper0000001.docx"
+  scheme: "paper0000001-scheme.json"
+  form: "paper0000001-form.json"

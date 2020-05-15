@@ -1,0 +1,12 @@
+{
+    "procuringEntity": {
+        "type": "Object",
+        "properties": {}
+    },
+    "supplierContractData": {
+        "type": "Object",
+        "properties": {}
+    },
+    "contract": {},
+    "buyerContractData": {}
+}
