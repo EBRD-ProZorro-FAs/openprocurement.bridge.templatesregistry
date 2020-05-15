@@ -244,7 +244,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     config = {
         'worker_config':
             {
-                'handler_registryBot': {
+                'handler_templateUploader': {
                     'resources_api_token': 'resources_api_token',
                     'resources_api_version': 'resources_api_version',
                     'resources_api_server': 'resources_api_server',
@@ -270,15 +270,15 @@ class TestTemplateUploaderHandler(unittest.TestCase):
 
 
     @patch('openprocurement.bridge.basic.handlers.APIClient')
-    @patch('openprocurement.bridge.registryBot.handlers.APIResourceClient')
-    @patch('openprocurement.bridge.registryBot.handlers.TemplateDownloaderFactory')
+    @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
+    @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_init(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, _, factory = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
         handler = TemplateUploaderHandler(self.config, 'cache_db')
 
         self.assertEquals(handler.cache_db, 'cache_db')
-        self.assertEquals(handler.handler_config, self.config['worker_config']['handler_registryBot'])
+        self.assertEquals(handler.handler_config, self.config['worker_config']['handler_templateUploader'])
         self.assertEquals(handler.main_config, self.config)
 
         self.assertEqual(mocked_client_cls.call_count, 1)
@@ -295,8 +295,8 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         factory.get_template_downloader.assert_called_with(handler.handler_config['template_downloader'])
 
     @patch('openprocurement.bridge.basic.handlers.APIClient')
-    @patch('openprocurement.bridge.registryBot.handlers.APIResourceClient')
-    @patch('openprocurement.bridge.registryBot.handlers.TemplateDownloaderFactory')
+    @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
+    @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_api_upload_document(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
@@ -352,8 +352,8 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         mocked_client.patch_document.assert_has_calls(calls, any_order=False)
 
     @patch('openprocurement.bridge.basic.handlers.APIClient')
-    @patch('openprocurement.bridge.registryBot.handlers.APIResourceClient')
-    @patch('openprocurement.bridge.registryBot.handlers.TemplateDownloaderFactory')
+    @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
+    @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_get_contract_proforma_document(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
         handler = TemplateUploaderHandler(self.config, 'cache_db')
@@ -375,8 +375,8 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         self.assertEqual(doc, test_data['documents'][1])
 
     @patch('openprocurement.bridge.basic.handlers.APIClient')
-    @patch('openprocurement.bridge.registryBot.handlers.APIResourceClient')
-    @patch('openprocurement.bridge.registryBot.handlers.TemplateDownloaderFactory')
+    @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
+    @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_upload_document_to_api(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls,
                                                                             mocked_downloader_factory_cls)

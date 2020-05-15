@@ -67,7 +67,7 @@ class TemplateUploaderHandler(HandlerTemplate):
 
     def __init__(self, config, cache_db):
         logger.info("Init registryBot handler.")
-        self.handler_name = 'handler_registryBot'
+        self.handler_name = 'handler_templateUploader'
         super(TemplateUploaderHandler, self).__init__(config, cache_db)
         self.template_downloader = TemplateDownloaderFactory().get_template_downloader(self.handler_config.get('template_downloader', {}))
 
