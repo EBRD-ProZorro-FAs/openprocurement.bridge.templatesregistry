@@ -15,8 +15,8 @@ class YamlTemplateDownloader(TemplateDownloader):
     def __init__(self, config):
         self.filename = config.get('filename')
         self.path_to_registry = config.get('registry_path')
-        full_path = os.path.join(self.path_to_registry, self.filename)
-        with open(full_path) as f:
+        self.registry_spec_path = os.path.join(self.path_to_registry, self.filename)
+        with open(self.registry_spec_path) as f:
             self.registry = safe_load(f)
 
     def get_template_by_id(self, template_id):
@@ -49,7 +49,7 @@ class TemplateDownloaderFactory(object):
     def get_template_downloader(self, config):
         downloader_type = config.get('type')
         downloader_cls = self.downloader_mappig.get(downloader_type)
-        if downloader_type is None:
+        if downloader_cls is None:
             raise ValueError(
                 'No such downloader type {}. Available list of types {}'.format(
                     downloader_type,
