@@ -1,6 +1,6 @@
 main:
   handlers:
-    - closeFrameworkAgreementSelectionUA
+    - templateUploader
   worker_config:
     worker_type: ${options['worker_type']}
     client_inc_step_timeout: 0.1
@@ -12,7 +12,7 @@ main:
     queue_timeout: 2
     bulk_save_limit: 1
     bulk_save_interval: 0.5
-    handler_registryBot:
+    handler_templateUploader:
       DS:
         host_url: ''
         auth_ds: ''
@@ -38,10 +38,11 @@ main:
     bulk_query_interval: 3
     bulk_query_limit: 100
   filter_config:
-    filter_type: 'jmespath_filter'
-    filters:
-      - {expression: "contains([`active.tendering`], status)"}
-      - {expression: "documents[?documentType == `contractProforma`]"}
+    filter_type: 'contractProforma'
+    status_accordance:
+      pmt:
+        - status1
+        - status2
     timeout: 3
   retrievers_params:
     down_requests_sleep: 5
