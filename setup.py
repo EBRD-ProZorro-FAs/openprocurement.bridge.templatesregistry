@@ -22,8 +22,10 @@ docs_requires = requires + [
 
 entry_points = {
     'openprocurement.bridge.basic.filter_plugins': [
+        'contractProforma = openprocurement.bridge.templatesregistry.filters:ContractProformaFilter'
     ],
     'openprocurement.bridge.basic.handlers': [
+        'templateUploader = openprocurement.bridge.templatesregistry.handlers:TemplateUploaderHandler'
     ]
 }
 
