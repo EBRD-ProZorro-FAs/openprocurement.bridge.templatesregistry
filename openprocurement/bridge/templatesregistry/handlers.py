@@ -11,7 +11,6 @@ from retrying import retry
 
 from openprocurement.bridge.basic.handlers import HandlerTemplate
 from openprocurement_client.clients import APIResourceClient
-from openprocurement.bridge.templatesregistry.utils import journal_context
 from openprocurement.bridge.templatesregistry.template_downloader import TemplateDownloaderFactory
 
 
@@ -80,19 +79,12 @@ class TemplateUploaderHandler(HandlerTemplate):
         )
 
     def upload_document_to_api(self, resource, doc, file_, doc_type):
-        response = self.client.upload_document(file_, resource['id'], doc_type=doc_type)
-        new_doc_id = response.data.id
-
         doc_data = {
             'relatedItem': doc['id'],
             'documentOf': 'document'
         }
-        response = self.client.patch_document(
-            resource['id'],
-            {'data': doc_data},
-            new_doc_id,
+        response = self.client.upload_document(file_, resource['id'], doc_type=doc_type, additional_doc_data=doc_data)
 
-        )
         return response
 
     def get_contract_proforma_document(self, resource):

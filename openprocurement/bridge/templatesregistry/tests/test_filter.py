@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import  os
 import unittest
 from copy import deepcopy
-from mock import patch, MagicMock, call
-from munch import munchify
+from mock import patch
 
 from gevent.queue import PriorityQueue
 

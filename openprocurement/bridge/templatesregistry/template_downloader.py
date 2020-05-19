@@ -1,6 +1,7 @@
 import os
 from yaml import safe_load
 
+
 class TemplateDownloader(object):
 
     def __init__(self, config):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import  os
+import os
 import unittest
 from copy import deepcopy
 from mock import patch, MagicMock, call
@@ -328,28 +328,17 @@ class TestTemplateUploaderHandler(unittest.TestCase):
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
         self.assertEqual(mocked_client.upload_document.call_count, 3)
-        calls = [
-            call(template_info['template'], tender['id'], doc_type='contractTemplate'),
-            call(template_info['scheme'], tender['id'], doc_type='contractScheme'),
-            call(template_info['form'], tender['id'], doc_type='contractForm'),
-        ]
-        mocked_client.upload_document.assert_has_calls(calls, any_order=False)
-
-        self.assertEqual(mocked_client.patch_document.call_count, 3)
-
         doc = tender['documents'][1]
-        doc_data = {
-            'data': {
-                'documentOf': 'document',
-                'relatedItem': doc['id']
-            }
+        additional_data = {
+            'documentOf': 'document',
+            'relatedItem': doc['id'],
         }
         calls = [
-            call(tender['id'], doc_data, docs[0].data.id),
-            call(tender['id'], doc_data, docs[1].data.id),
-            call(tender['id'], doc_data, docs[2].data.id),
+            call(template_info['template'], tender['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
+            call(template_info['scheme'], tender['id'], doc_type='contractScheme', additional_doc_data=additional_data),
+            call(template_info['form'], tender['id'], doc_type='contractForm',additional_doc_data=additional_data),
         ]
-        mocked_client.patch_document.assert_has_calls(calls, any_order=False)
+        mocked_client.upload_document.assert_has_calls(calls, any_order=False)
 
     @patch('openprocurement.bridge.basic.handlers.APIClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
@@ -370,7 +359,6 @@ class TestTemplateUploaderHandler(unittest.TestCase):
                 }
             ]
         }
-
         doc = handler.get_contract_proforma_document(test_data)
         self.assertEqual(doc, test_data['documents'][1])
 
@@ -382,14 +370,6 @@ class TestTemplateUploaderHandler(unittest.TestCase):
                                                                             mocked_downloader_factory_cls)
         handler = TemplateUploaderHandler(self.config, 'cache_db')
 
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field'
-                }
-            } for i in range(3)
-        ]
         doc = {
                 'data': {
                     'id': 'someid',
@@ -408,18 +388,17 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         test_file = 'test_file'
 
         handler.upload_document_to_api(test_resource, test_doc, test_file, 'test_doc_type')
-        mocked_client.upload_document.assert_called_once_with(test_file, test_resource['id'], doc_type='test_doc_type')
-        patched_data = {
-            'data': {
-                'documentOf': 'document',
-                'relatedItem': test_doc['id'],
-            }
+        additional_data = {
+            'documentOf': 'document',
+            'relatedItem': test_doc['id'],
         }
-        mocked_client.patch_document.assert_called_once_with(
+        mocked_client.upload_document.assert_called_once_with(
+            test_file,
             test_resource['id'],
-            patched_data,
-            doc.data.id
+            doc_type='test_doc_type',
+            additional_doc_data=additional_data
         )
+
 
 
 def suite():
