@@ -34,7 +34,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md')) as f:
     README = f.read()
 
-setup(name='openprocurement.bridge.registryBot',
+setup(name='openprocurement.bridge.templatesregistry',
       version=version,
       description="",
       long_description=README,
@@ -55,5 +55,5 @@ setup(name='openprocurement.bridge.registryBot',
       zip_safe=False,
       install_requires=requires,
       extras_require={'test': test_requires, 'docs': docs_requires},
-      test_suite="openprocurement.bridge.registryBot.tests.main.suite",
+      test_suite="openprocurement.bridge.templatesregistry.tests.main.suite",
       entry_points=entry_points)

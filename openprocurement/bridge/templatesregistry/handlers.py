@@ -33,7 +33,7 @@ config = {
     'output_resources_api_server': '',
     'output_public_resources_api_server': '',
     'output_resource': 'agreements',
-    'handler_cfaua': {
+    'handler_templateUploader': {
         'resources_api_token': '',
         'output_resources_api_token': 'agreement_token',
         'resources_api_version': '',
