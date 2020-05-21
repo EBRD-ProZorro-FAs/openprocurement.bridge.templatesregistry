@@ -227,6 +227,7 @@ CONFIG = {
     'filter_config': {
         'status_accordance': {
             'dgf': ['status1'],
+            'others': ['status2']
         },
         'timeout': 0,
     },
@@ -326,7 +327,7 @@ class TestContractProformaFilter(unittest.TestCase):
         filter._run()
         self.assertEqual(len(self.filtered_queue), 0)
 
-        # Wrong procurementMethodType
+        # Wrong procurementMethodType without appropriate status
         infinity.__nonzero__.side_effect = [True, False]
         doc = {
             'id': 'test_id',
@@ -339,9 +340,28 @@ class TestContractProformaFilter(unittest.TestCase):
                 }
             ],
         }
+        self.input_queue.put((None, deepcopy(doc)))
 
         filter._run()
         self.assertEqual(len(self.filtered_queue), 0)
+
+        # Wrong procurementMethodType with appropriate status
+        infinity.__nonzero__.side_effect = [True, False]
+        doc = {
+            'id': 'test_id',
+            'dateModified': '1970-01-01',
+            'procurementMethodType': 'other_pmt',
+            'status': 'status2',
+            'documents': [
+                {
+                    'documentType': 'contractProforma'
+                }
+            ],
+        }
+        self.input_queue.put((None, deepcopy(doc)))
+
+        filter._run()
+        self.assertEqual(len(self.filtered_queue), 1)
 
 
 def suite():

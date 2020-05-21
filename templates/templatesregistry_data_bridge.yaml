@@ -42,9 +42,10 @@ main:
   filter_config:
     filter_type: 'contractProforma'
     status_accordance:
-      pmt:
-        - status1
-        - status2
+      belowThreshold:
+        - active.enquiries
+      others:
+        - active.tendering
     timeout: 3
   retrievers_params:
     down_requests_sleep: 5

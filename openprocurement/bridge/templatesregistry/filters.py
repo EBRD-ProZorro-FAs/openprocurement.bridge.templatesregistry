@@ -34,6 +34,12 @@ class ContractProformaFilter(Greenlet):
         self.status_accordance = self.config['filter_config'].get('status_accordance', {})
         self.timeout = self.config['filter_config']['timeout']
 
+    def get_pmt_statuses(self, pmt):
+        statuses = self.status_accordance.get(pmt)
+        if not statuses:
+            return self.status_accordance.get('others', [])
+        return statuses
+
     def _run(self):
         while INFINITY:
             if not self.input_queue.empty():
@@ -56,7 +62,7 @@ class ContractProformaFilter(Greenlet):
             status = resource['status']
             procurement_type = resource['procurementMethodType']
 
-            statuses_to_process = self.status_accordance.get(procurement_type, [])
+            statuses_to_process = self.get_pmt_statuses(procurement_type)
 
             if status not in statuses_to_process:
                 logger.info(
