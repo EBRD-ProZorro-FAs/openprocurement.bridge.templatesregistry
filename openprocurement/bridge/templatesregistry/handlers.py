@@ -60,6 +60,11 @@ CONFIG_MAPPING = {
 
 
 logger = logging.getLogger(__name__)
+TEMPLATE_DOCUMENT_TYPES = [
+    'contractTemplate',
+    'contractScheme',
+    'contractForm',
+]
 
 
 class TemplateUploaderHandler(HandlerTemplate):
@@ -78,42 +83,110 @@ class TemplateUploaderHandler(HandlerTemplate):
             ds_config=self.handler_config.get('DS', {}),
         )
 
-    def upload_document_to_api(self, resource, doc, file_, doc_type):
+    def _upload_document_to_api(self, resource, contract_proforma_document, file_, doc_type):
         doc_data = {
-            'relatedItem': doc['id'],
+            'relatedItem': contract_proforma_document['id'],
             'documentOf': 'document'
         }
         response = self.client.upload_document(file_, resource['id'], doc_type=doc_type, additional_doc_data=doc_data)
 
         return response
 
-    def get_contract_proforma_document(self, resource):
-        for doc in resource.get('documents', []):
-            if doc.get('documentType', '') == 'contractProforma':
-                return doc
+    def _update_document_in_api(self, resource, document, contract_proforma_document, file_, doc_type):
+        doc_data = {
+            'relatedItem': contract_proforma_document['id'],
+            'documentOf': 'document'
+        }
+        response = self.client.update_document(
+            file_,
+            resource['id'],
+            document['id'],
+            doc_type=doc_type,
+            additional_doc_data=doc_data
+        )
+        return response
 
-    def process_resource(self, resource):
-        doc = self.get_contract_proforma_document(resource)
+    def get_contract_proforma_documents(self, resource):
+        return [doc for doc in resource.get('documents', []) if doc.get('documentType', '') == 'contractProforma']
 
-        template_info = self.template_downloader.get_template_by_id(doc['id'])
+    def get_template_documents(self, resource, contract_proforma_document):
+        template_documents = [doc for doc in resource.get('documents', []) if doc.get('relatedItem') == contract_proforma_document['id']]
+        template_documents = [doc for doc in template_documents if doc.get('documentType') in TEMPLATE_DOCUMENT_TYPES]
+        return template_documents
 
-        self.upload_document_to_api(
+    def is_templates_should_be_changed(self, resource, contract_proforma_document):
+        template_documents = self.get_template_documents(resource, contract_proforma_document)
+        is_template_documents_older = [contract_proforma_document['dateModified'] > doc['dateModified'] for doc in template_documents]
+        return any(is_template_documents_older)
+
+    def is_templates_should_be_created(self, resource, contract_proforma_document):
+        template_documents = self.get_template_documents(resource, contract_proforma_document)
+        return not template_documents
+
+    def _create_template_documents(self, resource, document):
+        template_info = self.template_downloader.get_template_by_id(document['templateId'])
+
+        self._upload_document_to_api(
             resource,
-            doc,
+            document,
             template_info['template'],
             'contractTemplate'
         )
 
-        self.upload_document_to_api(
+        self._upload_document_to_api(
             resource,
-            doc,
+            document,
             template_info['scheme'],
             'contractScheme'
         )
 
-        self.upload_document_to_api(
+        self._upload_document_to_api(
             resource,
-            doc,
+            document,
             template_info['form'],
             'contractForm'
         )
+
+    def _update_template_documents(self, resource, document):
+        template_info = self.template_downloader.get_template_by_id(document['templateId'])
+
+        template_docs = {
+            doc['documentType']: doc
+            for doc in self.get_template_documents(resource, document)
+        }
+
+        self._update_document_in_api(
+            resource,
+            template_docs['contractTemplate'],
+            document,
+            template_info['template'],
+            'contractTemplate'
+        )
+
+        self._update_document_in_api(
+            resource,
+            template_docs['contractScheme'],
+            document,
+            template_info['scheme'],
+            'contractScheme'
+        )
+
+        self._update_document_in_api(
+            resource,
+            template_docs['contractForm'],
+            document,
+            template_info['form'],
+            'contractForm'
+        )
+
+    def process_document(self, resource, document):
+
+        if self.is_templates_should_be_created(resource, document):
+            self._create_template_documents(resource, document)
+        elif self.is_templates_should_be_changed(resource, document):
+            self._update_template_documents(resource, document)
+
+    def process_resource(self, resource):
+        cp_documents = self.get_contract_proforma_documents(resource)
+        for doc in cp_documents:
+            self.process_document(resource, doc)
