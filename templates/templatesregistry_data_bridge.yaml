@@ -25,9 +25,6 @@ main:
         type: registry_file
         registry_path: ''
         filename: registry.yaml
-  coordinator_config:
-    connection_url: 'redis://localhost:6379/2'
-    coordinator_name: 'bridge'
   storage_config:
     # required for databridge
     storage_type: "redis"  # possible values ['couchdb', 'elasticsearch', 'redis']
