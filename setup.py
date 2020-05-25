@@ -25,7 +25,7 @@ entry_points = {
         'contractProforma = openprocurement.bridge.templatesregistry.filters:ContractProformaFilter'
     ],
     'openprocurement.bridge.basic.handlers': [
-        'templateUploader = openprocurement.bridge.templatesregistry.handlers:TemplateUploaderHandler'
+        'belowThreshold = openprocurement.bridge.templatesregistry.handlers:TemplateUploaderHandler'
     ]
 }
 

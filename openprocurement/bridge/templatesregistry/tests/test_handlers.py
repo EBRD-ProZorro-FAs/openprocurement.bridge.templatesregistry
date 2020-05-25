@@ -153,7 +153,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         }
         calls = [
             call(template_info['template'], tender['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
-            call(template_info['scheme'], tender['id'], doc_type='contractScheme', additional_doc_data=additional_data),
+            call(template_info['scheme'], tender['id'], doc_type='contractSchema', additional_doc_data=additional_data),
             call(template_info['form'], tender['id'], doc_type='contractForm',additional_doc_data=additional_data),
         ]
         mocked_client.upload_document.assert_has_calls(calls, any_order=False)
@@ -206,7 +206,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
                 "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
                 "format": "application/msword",
                 "documentOf": "document",
-                "documentType": "contractScheme",
+                "documentType": "contractSchema",
                 "templateId": "paper0000001",
                 "datePublished": "2020-05-08T12:29:57.154151+03:00",
                 "dateModified": "2020-04-08T12:29:57.154185+03:00",
@@ -241,7 +241,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         }
         calls = [
             call(template_info['template'], tender['id'], template_docs[0]['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
-            call(template_info['scheme'], tender['id'], template_docs[1]['id'], doc_type='contractScheme', additional_doc_data=additional_data),
+            call(template_info['scheme'], tender['id'], template_docs[1]['id'], doc_type='contractSchema', additional_doc_data=additional_data),
             call(template_info['form'], tender['id'], template_docs[2]['id'], doc_type='contractForm',additional_doc_data=additional_data),
         ]
         mocked_client.update_document.assert_has_calls(calls, any_order=False)
@@ -292,7 +292,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
                 "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
                 "format": "application/msword",
                 "documentOf": "document",
-                "documentType": "contractScheme",
+                "documentType": "contractSchema",
                 "templateId": "paper0000001",
                 "datePublished": "2020-05-08T12:29:57.154151+03:00",
                 "dateModified": "2020-06-08T12:29:57.154185+03:00",
