@@ -111,10 +111,11 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         self.assertEqual(factory.get_template_downloader.call_count, 1)
         factory.get_template_downloader.assert_called_with(handler.handler_config['template_downloader'])
 
+    @patch('openprocurement.bridge.templatesregistry.handlers.BytesIO')
     @patch('openprocurement.bridge.basic.handlers.APIClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
-    def test_api_upload_document(self, mocked_downloader_factory_cls, mocked_client_cls, _):
+    def test_api_upload_document(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
         template_info = {
@@ -139,31 +140,49 @@ class TestTemplateUploaderHandler(unittest.TestCase):
 
         handler = TemplateUploaderHandler(self.config, 'cache_db')
 
+        wrapped_files = [
+            'wrappedfile1',
+            'wrappedfile2',
+            'wrappedfile3',
+        ]
+        mocked_bytesio.side_effect = wrapped_files
+
         handler.process_resource(tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
 
         cp_doc = handler.get_contract_proforma_documents(tender)[0]
         template_downloader.get_template_by_id.assert_called_with(cp_doc['templateId'])
+
+        calls = [
+            call(template_info['template']),
+            call(template_info['scheme']),
+            call(template_info['form']),
+        ]
+        mocked_bytesio.assert_has_calls(calls, any_order=False)
+
+
         self.assertEqual(mocked_client.upload_document.call_count, 3)
         doc = tender['documents'][1]
         additional_data = {
             'documentOf': 'document',
             'relatedItem': doc['id'],
         }
+
         calls = [
-            call(template_info['template'], tender['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
-            call(template_info['scheme'], tender['id'], doc_type='contractSchema', additional_doc_data=additional_data),
-            call(template_info['form'], tender['id'], doc_type='contractForm',additional_doc_data=additional_data),
+            call(wrapped_files[0], tender['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
+            call(wrapped_files[1], tender['id'], doc_type='contractSchema', additional_doc_data=additional_data),
+            call(wrapped_files[2], tender['id'], doc_type='contractForm',additional_doc_data=additional_data),
         ]
         mocked_client.upload_document.assert_has_calls(calls, any_order=False)
 
         self.assertEqual(mocked_client.update_document.call_count, 0)
 
+    @patch('openprocurement.bridge.templatesregistry.handlers.BytesIO')
     @patch('openprocurement.bridge.basic.handlers.APIClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
-    def test_api_update_document(self, mocked_downloader_factory_cls, mocked_client_cls, _):
+    def test_api_update_document(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
         template_info = {
@@ -227,12 +246,27 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         ]
         custom_tender['documents'] += template_docs
 
+        wrapped_files = [
+            'wrappedfile1',
+            'wrappedfile2',
+            'wrappedfile3',
+        ]
+        mocked_bytesio.side_effect = wrapped_files
+
         handler.process_resource(custom_tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
 
         cp_doc = handler.get_contract_proforma_documents(tender)[0]
         template_downloader.get_template_by_id.assert_called_with(cp_doc['templateId'])
+
+        calls = [
+            call(template_info['template']),
+            call(template_info['scheme']),
+            call(template_info['form']),
+        ]
+        mocked_bytesio.assert_has_calls(calls, any_order=False)
+
         self.assertEqual(mocked_client.update_document.call_count, 3)
         doc = tender['documents'][1]
         additional_data = {
@@ -240,9 +274,9 @@ class TestTemplateUploaderHandler(unittest.TestCase):
             'relatedItem': doc['id'],
         }
         calls = [
-            call(template_info['template'], tender['id'], template_docs[0]['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
-            call(template_info['scheme'], tender['id'], template_docs[1]['id'], doc_type='contractSchema', additional_doc_data=additional_data),
-            call(template_info['form'], tender['id'], template_docs[2]['id'], doc_type='contractForm',additional_doc_data=additional_data),
+            call(wrapped_files[0], tender['id'], template_docs[0]['id'], doc_type='contractTemplate', additional_doc_data=additional_data),
+            call(wrapped_files[1], tender['id'], template_docs[1]['id'], doc_type='contractSchema', additional_doc_data=additional_data),
+            call(wrapped_files[2], tender['id'], template_docs[2]['id'], doc_type='contractForm',additional_doc_data=additional_data),
         ]
         mocked_client.update_document.assert_has_calls(calls, any_order=False)
         self.assertEqual(mocked_client.upload_document.call_count, 0)
@@ -347,10 +381,11 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         self.assertEqual(docs[0], test_data['documents'][1])
         self.assertEqual(docs[1], test_data['documents'][2])
 
+    @patch('openprocurement.bridge.templatesregistry.handlers.BytesIO')
     @patch('openprocurement.bridge.basic.handlers.APIClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
-    def test_upload_document_to_api(self, mocked_downloader_factory_cls, mocked_client_cls, _):
+    def test_upload_document_to_api(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls,
                                                                             mocked_downloader_factory_cls)
         handler = TemplateUploaderHandler(self.config, 'cache_db')
@@ -371,23 +406,29 @@ class TestTemplateUploaderHandler(unittest.TestCase):
             'id': 'doc_id'
         }
         test_file = 'test_file'
+        wrapped_file = 'wrappedfile'
+        mocked_bytesio.return_value = wrapped_file
 
         handler._upload_document_to_api(test_resource, test_doc, test_file, 'test_doc_type')
+
+        mocked_bytesio.assert_called_with(test_file)
+
         additional_data = {
             'documentOf': 'document',
             'relatedItem': test_doc['id'],
         }
         mocked_client.upload_document.assert_called_once_with(
-            test_file,
+            wrapped_file,
             test_resource['id'],
             doc_type='test_doc_type',
             additional_doc_data=additional_data
         )
 
+    @patch('openprocurement.bridge.templatesregistry.handlers.BytesIO')
     @patch('openprocurement.bridge.basic.handlers.APIClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.APIResourceClient')
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
-    def test_update_document_to_api(self, mocked_downloader_factory_cls, mocked_client_cls, _):
+    def test_update_document_to_api(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls,
                                                                             mocked_downloader_factory_cls)
         handler = TemplateUploaderHandler(self.config, 'cache_db')
@@ -412,19 +453,24 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         }
         test_file = 'test_file'
 
+        wrapped_file = 'wrappedfile'
+        mocked_bytesio.return_value = wrapped_file
+
         handler._update_document_in_api(test_resource, test_template_doc, test_cp_doc, test_file, 'test_doc_type')
+
+        mocked_bytesio.assert_called_with(test_file)
+
         additional_data = {
             'documentOf': 'document',
             'relatedItem': test_cp_doc['id'],
         }
         mocked_client.update_document.assert_called_once_with(
-            test_file,
+            wrapped_file,
             test_resource['id'],
             test_template_doc['id'],
             doc_type='test_doc_type',
             additional_doc_data=additional_data
         )
-
 
 
 def suite():
