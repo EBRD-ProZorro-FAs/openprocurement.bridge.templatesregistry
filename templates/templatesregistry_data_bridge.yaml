@@ -1,6 +1,6 @@
 main:
   handlers:
-    - belowThreshold
+    - common
   worker_config:
     worker_type: ${options['worker_type']}
     client_inc_step_timeout: 0.1
