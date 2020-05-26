@@ -59,6 +59,12 @@ TEMPLATE_DOCUMENT_TYPES = [
     'contractForm',
 ]
 
+DOC_TYPE_FILE_TYPE_MAP = {
+    'contractTemplate': 'template',
+    'contractSchema': 'scheme',
+    'contractForm': 'form',
+}
+
 
 class TemplateUploaderHandler(HandlerTemplate):
 
@@ -126,41 +132,10 @@ class TemplateUploaderHandler(HandlerTemplate):
         template_documents = [doc for doc in template_documents if doc.get('documentType') in TEMPLATE_DOCUMENT_TYPES]
         return template_documents
 
-    def is_templates_should_be_changed(self, resource, contract_proforma_document):
-        template_documents = self.get_template_documents(resource, contract_proforma_document)
-        is_template_documents_older = [contract_proforma_document['dateModified'] > doc['dateModified'] for doc in template_documents]
-        return any(is_template_documents_older)
+    def is_template_older_contract_proforma(self, contract_proforma_doc, template_doc):
+        return contract_proforma_doc['dateModified'] > template_doc['dateModified']
 
-    def is_templates_should_be_created(self, resource, contract_proforma_document):
-        template_documents = self.get_template_documents(resource, contract_proforma_document)
-        return not template_documents
-
-    def _create_template_documents(self, resource, document):
-        logger.info('Get templates for tender {} and document {}'.format(resource['id'], document['id']))
-        template_info = self.template_downloader.get_template_by_id(document['templateId'])
-
-        self._upload_document_to_api(
-            resource,
-            document,
-            template_info['template'],
-            'contractTemplate'
-        )
-
-        self._upload_document_to_api(
-            resource,
-            document,
-            template_info['scheme'],
-            'contractSchema'
-        )
-
-        self._upload_document_to_api(
-            resource,
-            document,
-            template_info['form'],
-            'contractForm'
-        )
-
-    def _update_template_documents(self, resource, document):
+    def _upload_template_documents(self, resource, document):
         logger.info('Get templates for tender {} and document {}'.format(resource['id'], document['id']))
         template_info = self.template_downloader.get_template_by_id(document['templateId'])
 
@@ -169,38 +144,27 @@ class TemplateUploaderHandler(HandlerTemplate):
             for doc in self.get_template_documents(resource, document)
         }
 
-        self._update_document_in_api(
-            resource,
-            template_docs['contractTemplate'],
-            document,
-            template_info['template'],
-            'contractTemplate'
-        )
-
-        self._update_document_in_api(
-            resource,
-            template_docs['contractSchema'],
-            document,
-            template_info['scheme'],
-            'contractSchema'
-        )
-
-        self._update_document_in_api(
-            resource,
-            template_docs['contractForm'],
-            document,
-            template_info['form'],
-            'contractForm'
-        )
+        for doc_type, file_type in DOC_TYPE_FILE_TYPE_MAP.items():
+            template_document = template_docs.get(doc_type)
+            if template_document and self.is_template_older_contract_proforma(document, template_document):
+                self._update_document_in_api(
+                    resource,
+                    template_document,
+                    document,
+                    template_info[file_type],
+                    doc_type
+                )
+            elif template_document is None:
+                self._upload_document_to_api(
+                    resource,
+                    document,
+                    template_info[file_type],
+                    doc_type
+                )
 
     def process_document(self, resource, document):
         logger.info("Process document {} of tender {} ".format(document['id'], resource['id']))
-        if self.is_templates_should_be_created(resource, document):
-            logger.info("Create documents for document {} of tender {}".format(document['id'], resource['id']))
-            self._create_template_documents(resource, document)
-        elif self.is_templates_should_be_changed(resource, document):
-            logger.info("Update documents for tender {} of tender {}".format(document['id'], resource['id']))
-            self._update_template_documents(resource, document)
+        self._upload_template_documents(resource, document)
 
     def process_resource(self, resource):
         cp_documents = self.get_contract_proforma_documents(resource)
