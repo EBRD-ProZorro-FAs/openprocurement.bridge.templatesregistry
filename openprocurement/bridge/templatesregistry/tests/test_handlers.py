@@ -39,6 +39,44 @@ tender = {
     ]
 }
 
+date_older_contract_proforma = '2020-04-08T12:29:57.154185+03:00'
+date_newer_contract_proforma = '2020-06-08T12:29:57.154185+03:00'
+template_docs = [
+    {
+        "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
+        "format": "application/msword",
+        "documentOf": "document",
+        "documentType": "contractTemplate",
+        "templateId": "paper0000001",
+        "datePublished": "2020-05-08T12:29:57.154151+03:00",
+        "dateModified": date_older_contract_proforma,
+        "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
+        "id": "1" * 32
+    },
+    {
+        "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
+        "format": "application/msword",
+        "documentOf": "document",
+        "documentType": "contractSchema",
+        "templateId": "paper0000001",
+        "datePublished": "2020-05-08T12:29:57.154151+03:00",
+        "dateModified": date_older_contract_proforma,
+        "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
+        "id": "2" * 32
+    },
+    {
+        "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
+        "format": "application/msword",
+        "documentOf": "document",
+        "documentType": "contractForm",
+        "templateId": "paper0000001",
+        "datePublished": "2020-05-08T12:29:57.154151+03:00",
+        "dateModified": date_older_contract_proforma,
+        "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
+        "id": "3" * 32
+    },
+]
+
 
 def prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls):
     template_downloader = MagicMock()
@@ -51,6 +89,18 @@ def prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls
 
     mocked_client_cls.return_value = mocked_client
     return mocked_client, template_downloader, factory
+
+
+def prepare_template_downloader_result(mocked_td):
+    template_info = {
+        'template': 'template',
+        'scheme': 'scheme',
+        'form': 'form',
+    }
+    mocked_td.get_template_by_id.side_effect = [
+        deepcopy(template_info),
+    ]
+    return template_info
 
 
 dir_path = os.path.dirname(__file__)
@@ -118,31 +168,12 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_upload_document(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
-        template_info = {
-            'template': 'template',
-            'scheme': 'scheme',
-            'form': 'form',
-        }
-        template_downloader.get_template_by_id.side_effect = [
-            deepcopy(template_info),
-        ]
-
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field',
-                }
-            } for i in range(3)
-        ]
-        docs = [munchify(doc) for doc in docs]
-        mocked_client.upload_document.side_effect = deepcopy(docs)
-
-        handler = TemplateUploaderHandler(self.config, 'cache_db')
+        template_info = prepare_template_downloader_result(template_downloader)
 
         wrapped_file = 'wrappedfile'
         mocked_bytesio.return_value = wrapped_file
 
+        handler = TemplateUploaderHandler(self.config, 'cache_db')
         handler.process_resource(tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
@@ -180,70 +211,15 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_update_all_documents(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
-        template_info = {
-            'template': 'template',
-            'scheme': 'scheme',
-            'form': 'form',
-        }
-        template_downloader.get_template_by_id.side_effect = [
-            deepcopy(template_info),
-        ]
-
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field',
-                }
-            } for i in range(3)
-        ]
-        docs = [munchify(doc) for doc in docs]
-        mocked_client.upload_document.side_effect = deepcopy(docs)
-
-        handler = TemplateUploaderHandler(self.config, 'cache_db')
+        template_info = prepare_template_downloader_result(template_downloader)
 
         custom_tender = deepcopy(tender)
-        cp_doc = handler.get_contract_proforma_documents(custom_tender)[0]
-        template_docs = [
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractTemplate",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-04-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "1" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractSchema",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-04-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "2" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractForm",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-04-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "3" * 32
-            },
-        ]
         custom_tender['documents'] += template_docs
 
         wrapped_file = 'wrappedfile'
         mocked_bytesio.return_value = wrapped_file
 
+        handler = TemplateUploaderHandler(self.config, 'cache_db')
         handler.process_resource(custom_tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
@@ -279,70 +255,19 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_update_one_old_template(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
-        template_info = {
-            'template': 'template',
-            'scheme': 'scheme',
-            'form': 'form',
-        }
-        template_downloader.get_template_by_id.side_effect = [
-            deepcopy(template_info),
-        ]
-
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field',
-                }
-            } for i in range(3)
-        ]
-        docs = [munchify(doc) for doc in docs]
-        mocked_client.upload_document.side_effect = deepcopy(docs)
-
-        handler = TemplateUploaderHandler(self.config, 'cache_db')
+        template_info = prepare_template_downloader_result(template_downloader)
 
         custom_tender = deepcopy(tender)
-        cp_doc = handler.get_contract_proforma_documents(custom_tender)[0]
-        template_docs = [
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractTemplate",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "1" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractSchema",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "2" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractForm",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-04-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "3" * 32
-            },
-        ]
-        custom_tender['documents'] += template_docs
+        custom_template_docs = deepcopy(template_docs)
+        custom_template_docs[0]['dateModified'] = date_newer_contract_proforma
+        custom_template_docs[1]['dateModified'] = date_newer_contract_proforma
+
+        custom_tender['documents'] += custom_template_docs
 
         wrapped_file = 'wrappedfile'
         mocked_bytesio.return_value = wrapped_file
 
+        handler = TemplateUploaderHandler(self.config, 'cache_db')
         handler.process_resource(custom_tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
@@ -374,59 +299,19 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_update_missed_file(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
-        template_info = {
-            'template': 'template',
-            'scheme': 'scheme',
-            'form': 'form',
-        }
-        template_downloader.get_template_by_id.side_effect = [
-            deepcopy(template_info),
-        ]
-
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field',
-                }
-            } for i in range(3)
-        ]
-        docs = [munchify(doc) for doc in docs]
-        mocked_client.upload_document.side_effect = deepcopy(docs)
-
-        handler = TemplateUploaderHandler(self.config, 'cache_db')
+        template_info = prepare_template_downloader_result(template_downloader)
 
         custom_tender = deepcopy(tender)
-        cp_doc = handler.get_contract_proforma_documents(custom_tender)[0]
-        template_docs = [
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractTemplate",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "1" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractForm",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "3" * 32
-            },
-        ]
-        custom_tender['documents'] += template_docs
+        custom_template_docs = deepcopy(template_docs)
+        custom_template_docs.pop(1)
+        custom_template_docs[0]['dateModified'] = date_newer_contract_proforma
+        custom_template_docs[1]['dateModified'] = date_newer_contract_proforma
+        custom_tender['documents'] += custom_template_docs
 
         wrapped_file = 'wrappedfile'
         mocked_bytesio.return_value = wrapped_file
 
+        handler = TemplateUploaderHandler(self.config, 'cache_db')
         handler.process_resource(custom_tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
@@ -456,66 +341,16 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_update_for_old_contract_proforma(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
-        template_info = {
-            'template': 'template',
-            'scheme': 'scheme',
-            'form': 'form',
-        }
-        template_downloader.get_template_by_id.side_effect = [
-            deepcopy(template_info),
-        ]
-        docs = [
-            {
-                'data': {
-                    'id': i,
-                    'some': 'field',
-                }
-            } for i in range(3)
-        ]
-        docs = [munchify(doc) for doc in docs]
-        mocked_client.upload_document.side_effect = deepcopy(docs)
-
-        handler = TemplateUploaderHandler(self.config, 'cache_db')
+        prepare_template_downloader_result(template_downloader)
 
         custom_tender = deepcopy(tender)
-        cp_doc = handler.get_contract_proforma_documents(custom_tender)[0]
-        template_docs = [
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractTemplate",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "1" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractSchema",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "2" * 32
-            },
-            {
-                "hash": "md5:00001bc3f8e3fe51a37912dda2665076",
-                "format": "application/msword",
-                "documentOf": "document",
-                "documentType": "contractForm",
-                "templateId": "paper0000001",
-                "datePublished": "2020-05-08T12:29:57.154151+03:00",
-                "dateModified": "2020-06-08T12:29:57.154185+03:00",
-                "relatedItem": cp_doc["id"],
-                "id": "3" * 32
-            },
-        ]
-        custom_tender['documents'] += template_docs
+        custom_template_docs = deepcopy(template_docs)
+        custom_template_docs[0]['dateModified'] = date_newer_contract_proforma
+        custom_template_docs[1]['dateModified'] = date_newer_contract_proforma
+        custom_template_docs[2]['dateModified'] = date_newer_contract_proforma
+        custom_tender['documents'] += custom_template_docs
 
+        handler = TemplateUploaderHandler(self.config, 'cache_db')
         handler.process_resource(custom_tender)
 
         self.assertEqual(template_downloader.get_template_by_id.call_count, 1)
