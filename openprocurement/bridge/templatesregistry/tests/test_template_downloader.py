@@ -21,9 +21,9 @@ class TestYamlTemplateDownloader(unittest.TestCase):
         template_downloader = YamlTemplateDownloader(self.config)
 
         self.assertEqual(self.config['filename'], template_downloader.filename)
-        self.assertEqual(self.config['registry_path'], template_downloader.path_to_registry)
+        self.assertEqual(self.config['registry_path'], str(template_downloader.path_to_registry))
         reg_spec_file = os.path.join(self.config['registry_path'], self.config['filename'])
-        self.assertEqual(reg_spec_file, template_downloader.registry_spec_path)
+        self.assertEqual(reg_spec_file, str(template_downloader.registry_spec_path))
 
         test_registry_data = {
             'paper0000001': {

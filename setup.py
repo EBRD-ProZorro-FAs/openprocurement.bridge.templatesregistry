@@ -8,6 +8,7 @@ requires = [
     'openprocurement.bridge.basic',
     'tooz',
     'retrying',
+    'pathlib',
 ]
 
 test_requires = requires + [
