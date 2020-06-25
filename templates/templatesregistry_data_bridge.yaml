@@ -22,9 +22,9 @@ main:
       resource: ${options['templateregistry_resource']}
       output_resource: ${options['templateregistry_output_resource']}
       template_downloader:
-        type: registry_file
-        registry_path: ''
-        filename: registry.yaml
+        type: ${options['template_downloader_type']}
+        registry_path: ${options['template_downloader_registry_path']}
+        filename: ${options['template_downloader_filename']}
   storage_config:
     # required for databridge
     storage_type: "redis"  # possible values ['couchdb', 'elasticsearch', 'redis']
