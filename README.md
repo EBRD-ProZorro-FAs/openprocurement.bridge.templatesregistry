@@ -1,3 +1,8 @@
+[![Coverage Status](https://coveralls.io/repos/github/openprocurement/openprocurement.bridge.templatesregistry/badge.svg)](https://coveralls.io/github/openprocurement/openprocurement.bridge.templatesregistry)
+[![Build Status](https://travis-ci.com/openprocurement/openprocurement.bridge.templatesregistry.svg?branch=master)](https://travis-ci.com/openprocurement/openprocurement.bridge.templatesregistry)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+
 openprocurement.bridge.templatestegistry
 =========================================
 
