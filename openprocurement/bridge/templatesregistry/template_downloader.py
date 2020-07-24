@@ -29,15 +29,15 @@ class YamlTemplateDownloader(TemplateDownloader):
 
         template = {}
         full_path = (self.path_to_registry / template_location_info.get('template')).resolve()
-        with full_path.open() as f:
+        with full_path.open('rb') as f:
             template['template'] = f.read()
 
         full_path = (self.path_to_registry / template_location_info.get('scheme')).resolve()
-        with full_path.open() as f:
+        with full_path.open('rb') as f:
             template['scheme'] = f.read()
 
         full_path = (self.path_to_registry / template_location_info.get('form')).resolve()
-        with full_path.open() as f:
+        with full_path.open('rb') as f:
             template['form'] = f.read()
 
         return template
