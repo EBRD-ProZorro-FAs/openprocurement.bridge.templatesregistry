@@ -139,6 +139,10 @@ class TemplateUploaderHandler(HandlerTemplate):
         logger.info('Get templates for tender {} and document {}'.format(resource['id'], document['id']))
         template_info = self.template_downloader.get_template_by_id(document['templateId'])
 
+        if template_info is None:
+            logger.info("Template {} doesn't exist in regisrty".format(document['templateId']))
+            return
+
         template_docs = {
             doc['documentType']: doc
             for doc in self.get_template_documents(resource, document)
