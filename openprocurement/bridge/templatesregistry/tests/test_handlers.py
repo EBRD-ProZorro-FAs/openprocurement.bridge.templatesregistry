@@ -47,7 +47,6 @@ template_docs = [
         "format": "application/msword",
         "documentOf": "document",
         "documentType": "contractTemplate",
-        "templateId": "paper0000001",
         "datePublished": "2020-05-08T12:29:57.154151+03:00",
         "dateModified": date_older_contract_proforma,
         "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
@@ -58,7 +57,6 @@ template_docs = [
         "format": "application/msword",
         "documentOf": "document",
         "documentType": "contractSchema",
-        "templateId": "paper0000001",
         "datePublished": "2020-05-08T12:29:57.154151+03:00",
         "dateModified": date_older_contract_proforma,
         "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
@@ -69,7 +67,6 @@ template_docs = [
         "format": "application/msword",
         "documentOf": "document",
         "documentType": "contractForm",
-        "templateId": "paper0000001",
         "datePublished": "2020-05-08T12:29:57.154151+03:00",
         "dateModified": date_older_contract_proforma,
         "relatedItem": "0003c31bfb0e4bdf80d42d57f75df000",
@@ -167,6 +164,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_api_upload_document(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
+        mocked_client.get_resource_item_subitem.return_value = munchify({'data': tender['documents'][1]})
 
         template_info = prepare_template_downloader_result(template_downloader)
 
@@ -210,6 +208,11 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_api_update_all_documents(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
+
+        updated_document = deepcopy(tender['documents'][1])
+        updated_document['previousVersions'] = [deepcopy(tender['documents'][1])]
+        updated_document['templateId'] = 'paper0000002'
+        mocked_client.get_resource_item_subitem.return_value = munchify({'data': updated_document})
 
         template_info = prepare_template_downloader_result(template_downloader)
 
@@ -255,11 +258,14 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     def test_api_update_one_old_template(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
 
+        updated_document = deepcopy(tender['documents'][1])
+        updated_document['previousVersions'] = [deepcopy(tender['documents'][1])]
+        mocked_client.get_resource_item_subitem.return_value = munchify({'data': updated_document})
+
         template_info = prepare_template_downloader_result(template_downloader)
 
         custom_tender = deepcopy(tender)
         custom_template_docs = deepcopy(template_docs)
-        custom_template_docs[0]['dateModified'] = date_newer_contract_proforma
         custom_template_docs[1]['dateModified'] = date_newer_contract_proforma
 
         custom_tender['documents'] += custom_template_docs
@@ -275,21 +281,8 @@ class TestTemplateUploaderHandler(unittest.TestCase):
         cp_doc = handler.get_contract_proforma_documents(tender)[0]
         template_downloader.get_template_by_id.assert_called_with(cp_doc['templateId'])
 
-        mocked_bytesio.assert_called_once_with(template_info['form'])
-
-        self.assertEqual(mocked_client.update_document.call_count, 1)
-        doc = tender['documents'][1]
-        additional_data = {
-            'documentOf': 'document',
-            'relatedItem': doc['id'],
-        }
-        mocked_client.update_document.assert_called_once_with(
-            wrapped_file,
-            tender['id'],
-            template_docs[2]['id'],
-            doc_type='contractForm',
-            additional_doc_data=additional_data
-        )
+        self.assertEqual(mocked_bytesio.call_count, 0)
+        self.assertEqual(mocked_client.update_document.call_count, 0)
         self.assertEqual(mocked_client.upload_document.call_count, 0)
 
     @patch('openprocurement.bridge.templatesregistry.handlers.BytesIO')
@@ -298,6 +291,7 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_api_update_missed_file(self, mocked_downloader_factory_cls, mocked_client_cls, _, mocked_bytesio):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
+        mocked_client.get_resource_item_subitem.return_value = munchify({'data': tender['documents'][1]})
 
         template_info = prepare_template_downloader_result(template_downloader)
 
@@ -340,6 +334,11 @@ class TestTemplateUploaderHandler(unittest.TestCase):
     @patch('openprocurement.bridge.templatesregistry.handlers.TemplateDownloaderFactory')
     def test_api_update_for_old_contract_proforma(self, mocked_downloader_factory_cls, mocked_client_cls, _):
         mocked_client, template_downloader, _ = prepare_mocks_handler_mocks(mocked_client_cls, mocked_downloader_factory_cls)
+
+        updated_document = deepcopy(tender['documents'][1])
+        updated_document['previousVersions'] = [deepcopy(tender['documents'][1])]
+        updated_document['templateId'] = 'paper0000001'
+        mocked_client.get_resource_item_subitem.return_value = munchify({'data': updated_document})
 
         prepare_template_downloader_result(template_downloader)
 

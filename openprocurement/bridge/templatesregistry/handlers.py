@@ -70,6 +70,7 @@ class TemplateUploaderHandler(HandlerTemplate):
 
     def __init__(self, config, cache_db):
         logger.info("Init registryBot handler.")
+        self.is_template_id_modified = None
         self.handler_name = 'handler_templateUploader'
         super(TemplateUploaderHandler, self).__init__(config, cache_db)
         self.template_downloader = TemplateDownloaderFactory().get_template_downloader(self.handler_config.get('template_downloader', {}))
@@ -132,10 +133,26 @@ class TemplateUploaderHandler(HandlerTemplate):
         template_documents = [doc for doc in template_documents if doc.get('documentType') in TEMPLATE_DOCUMENT_TYPES]
         return template_documents
 
-    def is_template_older_contract_proforma(self, contract_proforma_doc, template_doc):
-        return contract_proforma_doc['dateModified'] > template_doc['dateModified']
+    def is_updated(self, resource, contract_proforma_doc, template_doc):
+        if self.is_template_id_modified is None:
+            response = self.client.get_resource_item_subitem(
+                resource['id'], contract_proforma_doc['id'], depth_path='documents'
+            )
+            updated_document = response.data
+            if len(updated_document.get('previousVersions', [])) == 0:
+                self.is_template_id_modified = False
+            else:
+                self.is_template_id_modified = updated_document.templateId != \
+                    updated_document.previousVersions[-1].get('templateId', updated_document.templateId)
+
+        if not self.is_template_id_modified:
+            return True
+
+        is_updated = contract_proforma_doc['dateModified'] < template_doc['dateModified']
+        return is_updated
 
     def _upload_template_documents(self, resource, document):
+        template_docs = {doc['documentType']: doc for doc in self.get_template_documents(resource, document)}
         logger.info('Get templates for tender {} and document {}'.format(resource['id'], document['id']))
         template_info = self.template_downloader.get_template_by_id(document['templateId'])
 
@@ -149,8 +166,9 @@ class TemplateUploaderHandler(HandlerTemplate):
         }
 
         for doc_type, file_type in DOC_TYPE_FILE_TYPE_MAP.items():
+            self.is_template_id_modified = None
             template_document = template_docs.get(doc_type)
-            if template_document and self.is_template_older_contract_proforma(document, template_document):
+            if template_document and not self.is_updated(resource, document, template_document):
                 self._update_document_in_api(
                     resource,
                     template_document,
