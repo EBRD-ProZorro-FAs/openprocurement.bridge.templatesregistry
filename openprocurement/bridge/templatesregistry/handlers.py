@@ -152,6 +152,7 @@ class TemplateUploaderHandler(HandlerTemplate):
         return is_updated
 
     def _upload_template_documents(self, resource, document):
+        self.is_template_id_modified = None
         template_docs = {doc['documentType']: doc for doc in self.get_template_documents(resource, document)}
         logger.info('Get templates for tender {} and document {}'.format(resource['id'], document['id']))
         template_info = self.template_downloader.get_template_by_id(document['templateId'])
@@ -166,7 +167,6 @@ class TemplateUploaderHandler(HandlerTemplate):
         }
 
         for doc_type, file_type in DOC_TYPE_FILE_TYPE_MAP.items():
-            self.is_template_id_modified = None
             template_document = template_docs.get(doc_type)
             if template_document and not self.is_updated(resource, document, template_document):
                 self._update_document_in_api(
